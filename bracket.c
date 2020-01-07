@@ -1,17 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-
-// I really want to implement linked lists so that I can dynamically
-// size my player list without having to declare a finite size
-typedef struct Player {
-  // For now list sizes can only be up to 10
-  int skill[10];
-  char name[10][50];
-} player;
-
-int LineCounter();
-player InfoExtractor();
-void ListPlayers();
+#include "bracket.h"
 
 int main() {
   FILE *pFile = NULL;
@@ -24,22 +11,24 @@ int main() {
   while (pFile == NULL) {
     fgets(fileInput, 50, stdin);
     fileInput[strlen(fileInput) - 1] = '\0';
-    pFile = fopen(fileInput, "r");
+    pFile = fopen(fileInput, "rw");
     if (pFile == NULL)
       printf("Does not exist, please give a new entry: ");
   }
 
   printf("\nFile contents:\n");
-  lines = LineCounter(pFile);
-  plyr = InfoExtractor(lines, plyr, pFile);
-  ListPlayers(lines, plyr);
+  lines = lineCounter(pFile);
+  infoExtractorAndPopulator(lines, pFile);
+
+  listPlayers(lines, head);
 
   fclose(pFile);
 
   return 0;
 }
 
-int LineCounter(FILE *file) {
+// Did not change after LL integration
+int lineCounter(FILE *file) {
   char c;
   int lineCount = 0;
   while (c != EOF) {
@@ -52,19 +41,41 @@ int LineCounter(FILE *file) {
   return lineCount;
 }
 
-player InfoExtractor(int length, player p, FILE *file) {
+// Takes formatted input from file and populates LL
+void infoExtractorAndPopulator(int length, FILE *file) {
   char dataEntry[50];
+  int skillEntry;
+  char nameEntry[50];
   // Loop through and check the lines
   for (int i = 0; i < length; i++) {
     fgets(dataEntry, 50, file);
-    sscanf(dataEntry, "%[^,], %d", p.name[i], &p.skill[i]);
+    sscanf(dataEntry, "%[^,], %d", nameEntry, &skillEntry);
+
+    temp = makeNewNode(skillEntry, nameEntry); // Takes formatted data from above and creates a new node
+    insertNode(&head, temp); // Links up node to head
   }
-  return p;
 }
 
-void ListPlayers(int length, player p) {
-  for (int i = 0; i < length; i++) {
-    printf("Player Name: %s\n", p.name[i]);
-    printf("Player Skill: %d\n\n", p.skill[i]);
+// List data from LL
+void listPlayers(int length, node *start) {
+  node *temp = start;
+  /* for (int i = 0; i < length; i++) { */ while (temp != NULL) {
+    printf("Player Name: %s\n", temp->data.name);
+    printf("Player Skill: %d\n\n", temp->data.skill);
+    temp = temp->next;
   }
+}
+
+node *makeNewNode(int skill, char name[50]) {
+  node *newNode = malloc(sizeof(node));
+  newNode->data.skill = skill;
+  strcpy(newNode->data.name, name);// newNode->data.name = name;
+  newNode->next = NULL;
+  return newNode;
+}
+
+node *insertNode(node **head, node *newNode) {
+  newNode->next = *head;
+  *head = newNode;
+  return newNode;
 }
